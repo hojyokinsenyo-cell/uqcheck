@@ -79,6 +79,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 .f-label{font-size:11px;color:#aaa;font-weight:500;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em}
 .f-input{width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:8px;font-size:15px;font-family:inherit;background:#fafafa;color:#222}
 .f-input:focus{outline:none;border-color:#4169e1}
+/* カレンダー */
+.cal-wrap{background:#fafafa;border:1.5px solid #eee;border-radius:10px;padding:10px 8px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 10px}
+.cal-label{font-size:14px;font-weight:700;color:#222}
+.cal-nav{width:28px;height:28px;border:1px solid #eee;background:#fff;border-radius:6px;font-size:16px;color:#4169e1;cursor:pointer;line-height:1}
+.cal-nav:active{background:#eef2fd}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dow{font-size:10px;color:#aaa;text-align:center;padding:2px 0 6px;font-weight:600}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:8px;cursor:pointer;color:#333}
+.cal-day.other{visibility:hidden;cursor:default}
+.cal-day.today{box-shadow:inset 0 0 0 1.5px #4169e1}
+.cal-day.past{color:#ddd;cursor:not-allowed}
+.cal-day.sun:not(.sel){color:#e05a5a}
+.cal-day.sat:not(.sel){color:#4a7fd6}
+.cal-day.sel{background:#4169e1;color:#fff;font-weight:700;box-shadow:none}
+/* 日付ごとの種別選択リスト */
+.date-item{display:flex;align-items:center;gap:8px;background:#fafafa;border:1px solid #eee;border-radius:8px;padding:8px 10px}
+.date-item-label{font-size:13px;font-weight:600;color:#333;flex:0 0 auto;min-width:64px}
+.date-item-type{flex:1;padding:6px 8px;border:1px solid #eee;border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:#333}
+.date-item-remove{cursor:pointer;color:#c99;font-weight:700;padding:0 4px;flex:0 0 auto}
+.date-chip{display:inline-flex;align-items:center;gap:5px;background:#eef2fd;color:#2d4fba;font-size:12px;font-weight:600;padding:5px 8px 5px 10px;border-radius:100px}
+.date-chip-x{cursor:pointer;color:#8fa3e0;font-weight:700}
 .radio-row{display:flex;gap:6px}
 .ropt{flex:1;padding:9px;border:1.5px solid #eee;border-radius:8px;text-align:center;font-size:13px;color:#aaa;cursor:pointer;font-weight:500}
 .ropt.sel{border-color:#222;color:#222;background:#f8f8f8;font-weight:700}
@@ -253,32 +275,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
       <div class="cat-tab" id="catTabHour" onclick="setCat('時間単位',this)">⏰ 時間単位</div>
     </div>
     <div class="form-section">
-      <div class="form-row" id="multiDayToggleRow">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-          <input type="checkbox" id="multiDayToggle" onchange="toggleMultiDay()" style="width:16px;height:16px">
-          <span style="font-size:13px;color:#555">複数日をまとめて申請する（連続した期間）</span>
-        </label>
-      </div>
-      <div class="form-row" id="singleDateRow">
-        <div class="f-label">取得希望日</div>
-        <input type="date" class="f-input" id="applyDate">
-      </div>
-      <div class="form-row" id="rangeDateRow" style="display:none">
-        <div class="f-label">期間（開始日 〜 終了日）</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="date" class="f-input" id="applyDateStart" oninput="updateRemainPreview()" style="flex:1">
-          <span style="color:#aaa">〜</span>
-          <input type="date" class="f-input" id="applyDateEnd" oninput="updateRemainPreview()" style="flex:1">
+      <div class="form-row" id="dateRow">
+        <div class="f-label">取得したい日をタップして選択（複数選択可）</div>
+        <div class="cal-wrap">
+          <div class="cal-head">
+            <button type="button" class="cal-nav" onclick="calMove(-1)">‹</button>
+            <span class="cal-label" id="calLabel"></span>
+            <button type="button" class="cal-nav" onclick="calMove(1)">›</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
         </div>
-        <div style="font-size:12px;color:#999;margin-top:6px" id="multiDayPreview">開始日・終了日を選択してください</div>
-      </div>
-      <div class="form-row" id="typeRow">
-        <div class="f-label">種別</div>
-        <div class="radio-row">
-          <div class="ropt sel" onclick="selType(this,'全日')">全日</div>
-          <div class="ropt" onclick="selType(this,'午前半休')">午前半休</div>
-          <div class="ropt" onclick="selType(this,'午後半休')">午後半休</div>
-        </div>
+        <div id="multiDateChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"></div>
+        <div style="font-size:12px;color:#999;margin-top:8px" id="multiDayPreview">まだ日付が選択されていません</div>
       </div>
       <div class="form-row" id="hourRow" style="display:none">
         <div class="f-label">取得時間数</div>
@@ -401,10 +409,9 @@ const API = {
     } catch(e) { return []; }
   },
   async getRequests(staffId) {
-    try {
-      const r = await this.jsonp({action:'getRequests', staffId});
-      return r.ok ? r.data : [];
-    } catch(e) { return []; }
+    const r = await this.jsonp({action:'getRequests', staffId});
+    if(!r || !r.ok) throw new Error((r&&r.error) || 'getRequests failed');
+    return r.data || [];
   },
   async addRequest(data) {
     try {
@@ -539,12 +546,81 @@ try{
 }catch(e){ DB.reset(); }
 
 let me = null;
-let applyType = '全日';
 let applyCategory = '有給';
 let applyHours = 1;
+let multiDates = []; // 選択された日付 'YYYY-MM-DD' の配列
+let dateTypes = {}; // 日付ごとの種別 {'YYYY-MM-DD': '全日'|'午前半休'|'午後半休'}
 
-const def = new Date(); def.setDate(def.getDate()+7);
-document.getElementById('applyDate').value = def.toISOString().slice(0,10);
+// ============================================================
+// カレンダーUI
+// ============================================================
+const calState = { y:0, m:0 };
+const DOW_JP = ['日','月','火','水','木','金','土'];
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+
+function calInit(){
+  const now = new Date();
+  calState.y = now.getFullYear();
+  calState.m = now.getMonth();
+  renderCal();
+}
+
+function calMove(delta){
+  calState.m += delta;
+  if(calState.m<0){ calState.m=11; calState.y--; }
+  if(calState.m>11){ calState.m=0; calState.y++; }
+  renderCal();
+}
+
+function renderCal(){
+  const labelEl = document.getElementById('calLabel');
+  const gridEl  = document.getElementById('calGrid');
+  if(!labelEl || !gridEl) return;
+  labelEl.textContent = `${calState.y}年${calState.m+1}月`;
+
+  const firstDow = new Date(calState.y, calState.m, 1).getDay();
+  const daysInMonth = new Date(calState.y, calState.m+1, 0).getDate();
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  let html = DOW_JP.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<firstDow;i++) html += `<div class="cal-day other">-</div>`;
+
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${calState.y}-${pad2(calState.m+1)}-${pad2(d)}`;
+    const dow = new Date(calState.y, calState.m, d).getDay();
+    const isPast = dateStr < todayStr;
+    let cls = 'cal-day';
+    if(dow===0) cls += ' sun';
+    if(dow===6) cls += ' sat';
+    if(dateStr===todayStr) cls += ' today';
+    if(isPast) cls += ' past';
+    if(multiDates.includes(dateStr)) cls += ' sel';
+    const onclick = isPast ? '' : ` onclick="calPick('${dateStr}')"`;
+    html += `<div class="${cls}"${onclick}>${d}</div>`;
+  }
+  gridEl.innerHTML = html;
+}
+
+function calPick(dateStr){
+  if(applyCategory==='時間単位'){
+    multiDates = multiDates.includes(dateStr) ? [] : [dateStr];
+  } else {
+    if(multiDates.includes(dateStr)){
+      multiDates = multiDates.filter(d=>d!==dateStr);
+      delete dateTypes[dateStr];
+    } else {
+      multiDates.push(dateStr);
+      multiDates.sort();
+      dateTypes[dateStr] = applyCategory==='夏期' ? '全日（夏季）' : '全日';
+    }
+  }
+  renderCal();
+  renderMultiDateChips();
+  updateRemainPreview();
+}
+
+calInit();
 
 // ローディング表示
 function showLoading(msg) {
@@ -752,52 +828,60 @@ function setCat(cat,el){
   document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   const isHour = cat==='時間単位';
-  document.getElementById('multiDayToggleRow').style.display = isHour ? 'none' : '';
-  if(isHour && multiDayMode){
-    document.getElementById('multiDayToggle').checked = false;
-    toggleMultiDay();
-  }
-  document.getElementById('typeRow').style.display = (isHour || multiDayMode) ? 'none' : '';
   document.getElementById('hourRow').style.display = isHour ? '' : 'none';
+  multiDates = [];
+  dateTypes = {};
+  renderCal();
+  renderMultiDateChips();
   document.getElementById('applyNote').textContent = cat==='夏期'
     ? '※ 夏季休暇は有給休暇とは別枠です（就業規則第24条）'
     : cat==='時間単位'
     ? '※ 時間単位有給は最大5時間まで取得できます'
-    : '※ 取得希望日の1週間前までに申請してください（第29条）';
+    : '※ 選択した日それぞれが1件の申請として登録されます（第29条：1週間前までに申請）';
   updateRemainPreview();
 }
 
-let multiDayMode = false;
-function toggleMultiDay(){
-  multiDayMode = document.getElementById('multiDayToggle').checked;
-  document.getElementById('singleDateRow').style.display = multiDayMode ? 'none' : '';
-  document.getElementById('rangeDateRow').style.display = multiDayMode ? '' : 'none';
-  document.getElementById('typeRow').style.display = (multiDayMode || applyCategory==='時間単位') ? 'none' : '';
-  document.getElementById('applyNote').textContent = multiDayMode
-    ? '※ 期間内の平日（土日を除く）がそれぞれ1件の申請として登録されます'
-    : (applyCategory==='夏期'
-      ? '※ 夏季休暇は有給休暇とは別枠です（就業規則第24条）'
-      : '※ 取得希望日の1週間前までに申請してください（第29条）');
+function removeMultiDate(d){
+  multiDates = multiDates.filter(x=>x!==d);
+  delete dateTypes[d];
+  renderMultiDateChips();
+  renderCal();
   updateRemainPreview();
 }
 
-function getWeekdaysInRange(startStr, endStr){
-  const start = new Date(startStr+'T00:00:00');
-  const end = new Date(endStr+'T00:00:00');
-  const days = [];
-  if(isNaN(start)||isNaN(end)||start>end) return days;
-  const cur = new Date(start);
-  while(cur<=end){
-    const dow = cur.getDay();
-    if(dow!==0 && dow!==6) days.push(cur.toISOString().slice(0,10));
-    cur.setDate(cur.getDate()+1);
+function setDateType(d, val){
+  dateTypes[d] = val;
+  updateRemainPreview();
+}
+
+function renderMultiDateChips(){
+  const el = document.getElementById('multiDateChips');
+  if(!el) return;
+  if(!multiDates.length){ el.innerHTML=''; return; }
+
+  if(applyCategory==='有給'){
+    el.style.display='flex'; el.style.flexDirection='column'; el.style.gap='6px';
+    el.innerHTML = multiDates.map(d=>{
+      const dt = new Date(d+'T00:00:00');
+      const label = `${dt.getMonth()+1}/${dt.getDate()}（${DOW_JP[dt.getDay()]}）`;
+      const t = dateTypes[d] || '全日';
+      return `<div class="date-item">
+        <span class="date-item-label">${label}</span>
+        <select class="date-item-type" onchange="setDateType('${d}', this.value)">
+          <option value="全日"${t==='全日'?' selected':''}>全日</option>
+          <option value="午前半休"${t==='午前半休'?' selected':''}>午前半休</option>
+          <option value="午後半休"${t==='午後半休'?' selected':''}>午後半休</option>
+        </select>
+        <span class="date-item-remove" onclick="removeMultiDate('${d}')">✕</span>
+      </div>`;
+    }).join('');
+  } else {
+    el.style.display='flex'; el.style.flexDirection='row'; el.style.flexWrap='wrap'; el.style.gap='6px';
+    el.innerHTML = multiDates.map(d=>{
+      const label = d.slice(5).replace('-','/');
+      return `<span class="date-chip">${label}<span onclick="removeMultiDate('${d}')" class="date-chip-x">✕</span></span>`;
+    }).join('');
   }
-  return days;
-}
-
-function selType(el,val){
-  document.querySelectorAll('#typeRow .ropt').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel'); applyType=val; updateRemainPreview();
 }
 
 function selHour(el,val){
@@ -809,35 +893,22 @@ function updateRemainPreview(){
   if(!me) return;
   const s = getLatestMe(); if(!s) return;
   const el = document.getElementById('remainPreview');
-  if(multiDayMode){
-    const startV=document.getElementById('applyDateStart').value;
-    const endV=document.getElementById('applyDateEnd').value;
-    const dates = (startV&&endV) ? getWeekdaysInRange(startV,endV) : [];
-    const cnt = dates.length;
-    const preview = document.getElementById('multiDayPreview');
-    if(!startV || !endV) preview.textContent = '開始日・終了日を選択してください';
-    else if(cnt===0) preview.textContent = '期間内に平日がありません（土日のみ選択されています）';
-    else preview.textContent = `対象：${cnt}日間（土日を除く） ${dates[0].slice(5).replace('-','/')}〜${dates[cnt-1].slice(5).replace('-','/')}`;
+  const cnt = multiDates.length;
+  const preview = document.getElementById('multiDayPreview');
+  preview.textContent = cnt>0
+    ? `${cnt}日分：${multiDates.map(d=>d.slice(5).replace('-','/')).join('、')}`
+    : 'まだ日付が選択されていません';
 
-    if(applyCategory==='夏期'){
-      const r=DB.getSummerRemain(s);
-      el.textContent = cnt>0 ? `現在 ${r}日 → 申請後 ${Math.max(0,r-cnt)}日（夏季休暇・${cnt}日分）` : '';
-    } else {
-      const r=DB.getRemain(s);
-      el.textContent = cnt>0 ? `現在 ${r}日 → 申請後 ${Math.max(0,r-cnt)}日（${cnt}日分）` : '';
-    }
-    return;
-  }
   if(applyCategory==='夏期'){
     const r=DB.getSummerRemain(s);
-    el.textContent=`現在 ${r}日 → 申請後 ${Math.max(0,r-1)}日（夏季休暇）`;
+    el.textContent = cnt>0 ? `現在 ${r}日 → 申請後 ${Math.max(0,r-cnt)}日（夏季休暇・${cnt}日分）` : '';
   } else if(applyCategory==='時間単位'){
     const r=DB.getHourLeaveRemain?DB.getHourLeaveRemain(s):Math.max(0,(s.hourLeaveGrant||5)-(s.hourLeaveUsed||0));
-    el.textContent=`現在 ${r}時間 → 申請後 ${Math.max(0,r-applyHours)}時間`;
+    el.textContent = cnt>0 ? `現在 ${r}時間 → 申請後 ${Math.max(0,r-applyHours)}時間` : '';
   } else {
-    const days=applyType==='全日'?1:0.5;
+    const totalDays = multiDates.reduce((sum,d)=> sum + ((dateTypes[d]||'全日')==='全日'?1:0.5), 0);
     const r=DB.getRemain(s);
-    el.textContent=`現在 ${r}日 → 申請後 ${Math.max(0,r-days)}日`;
+    el.textContent = cnt>0 ? `現在 ${r}日 → 申請後 ${Math.max(0,r-totalDays)}日${cnt>1?`（${cnt}日分・計${totalDays}日）`:''}` : '';
   }
 }
 
@@ -853,82 +924,56 @@ async function submitApply(){
   const s=getLatestMe(); if(!s) return;
   const btn = document.getElementById('subBtn');
 
-  if(multiDayMode){
-    const startV=document.getElementById('applyDateStart').value;
-    const endV=document.getElementById('applyDateEnd').value;
-    if(!startV || !endV){ showToast('開始日と終了日を選択してください'); return; }
-    const dates = getWeekdaysInRange(startV, endV);
-    if(!dates.length){ showToast('期間内に平日がありません'); return; }
+  if(!multiDates.length){ showToast('日付を1つ以上選択してください'); return; }
+  const dates = [...multiDates];
 
-    const cat = applyCategory==='夏期' ? '夏期' : '有給';
-    const remainNow = cat==='夏期' ? DB.getSummerRemain(s) : DB.getRemain(s);
-    if(remainNow < dates.length){ showToast(`残日数が不足しています（必要：${dates.length}日）`); return; }
-
-    btn.disabled = true;
-    let onlineCount = 0, offlineCount = 0;
-    for(let i=0;i<dates.length;i++){
-      btn.textContent = `送信中... (${i+1}/${dates.length})`;
-      const reqData = cat==='夏期'
-        ? {staffId:me.id,name:s.name,date:dates[i],type:'全日（夏季）',days:1,memo,category:'夏期'}
-        : {staffId:me.id,name:s.name,date:dates[i],type:'全日',days:1,memo,category:'有給'};
-      try{
-        const r = await API.addRequest(reqData);
-        DB.addRequest(reqData);
-        if(r && r.ok) onlineCount++; else offlineCount++;
-      }catch(e){
-        DB.addRequest(reqData);
-        offlineCount++;
-      }
-    }
-    document.getElementById('applyMemo').value='';
-    document.getElementById('multiDayToggle').checked=false;
-    toggleMultiDay();
-    showToast(offlineCount>0
-      ? `${dates.length}日分の申請を送信しました（一部オフライン保存：${offlineCount}件）`
-      : `${dates.length}日分の申請を送信しました！園長の承認をお待ちください`);
-    showPage('history',document.querySelectorAll('.ni')[2]);
-    btn.textContent = '申請する'; btn.disabled = false;
-    return;
-  }
-
-  const date=document.getElementById('applyDate').value;
-  if(!date){ showToast('取得希望日を選択してください'); return; }
-
-  let reqData;
+  let totalDays;
   if(applyCategory==='夏期'){
-    if(DB.getSummerRemain(s)<=0){ showToast('夏季休暇の残日数がありません'); return; }
-    reqData={staffId:me.id,name:s.name,date,type:'全日（夏季）',days:1,memo,category:'夏期'};
+    const r = DB.getSummerRemain(s);
+    if(r < dates.length){ showToast(`夏季休暇の残日数が不足しています（必要：${dates.length}日）`); return; }
   } else if(applyCategory==='時間単位'){
     const r=DB.getHourLeaveRemain?DB.getHourLeaveRemain(s):Math.max(0,(s.hourLeaveGrant||5)-(s.hourLeaveUsed||0));
     if(r<applyHours){ showToast('時間単位有給の残時間が不足しています'); return; }
-    reqData={staffId:me.id,name:s.name,date,type:applyHours+'時間',days:applyHours/8,memo,category:'時間単位'};
   } else {
-    const days=applyType==='全日'?1:0.5;
-    if(DB.getRemain(s)<days){ showToast('残日数が不足しています'); return; }
-    reqData={staffId:me.id,name:s.name,date,type:applyType,days,memo,category:'有給'};
+    totalDays = dates.reduce((sum,d)=> sum + ((dateTypes[d]||'全日')==='全日'?1:0.5), 0);
+    const r = DB.getRemain(s);
+    if(r < totalDays){ showToast(`残日数が不足しています（必要：${totalDays}日）`); return; }
   }
 
-  btn.textContent = '送信中...'; btn.disabled = true;
-  try {
-    const r = await API.addRequest(reqData);
-    if(r.ok){
-      // ローカルにも保存
-      DB.addRequest(reqData);
-      document.getElementById('applyMemo').value='';
-      showToast('申請を送信しました！園長の承認をお待ちください');
-      showPage('history',document.querySelectorAll('.ni')[2]);
+  btn.disabled = true;
+  let onlineCount = 0, offlineCount = 0;
+  for(let i=0;i<dates.length;i++){
+    btn.textContent = dates.length>1 ? `送信中... (${i+1}/${dates.length})` : '送信中...';
+    let reqData;
+    if(applyCategory==='夏期'){
+      reqData = {staffId:me.id,name:s.name,date:dates[i],type:'全日（夏季）',days:1,memo,category:'夏期'};
+    } else if(applyCategory==='時間単位'){
+      reqData = {staffId:me.id,name:s.name,date:dates[i],type:applyHours+'時間',days:applyHours/8,memo,category:'時間単位'};
     } else {
-      showToast('送信エラー: ' + (r.error||'もう一度お試しください'));
+      const t = dateTypes[dates[i]] || '全日';
+      const days = t==='全日' ? 1 : 0.5;
+      reqData = {staffId:me.id,name:s.name,date:dates[i],type:t,days,memo,category:'有給'};
     }
-  } catch(e) {
-    // オフライン時はローカル保存
-    DB.addRequest(reqData);
-    document.getElementById('applyMemo').value='';
-    showToast('申請を送信しました（オフライン保存）');
-    showPage('history',document.querySelectorAll('.ni')[2]);
-  } finally {
-    btn.textContent = '申請する'; btn.disabled = false;
+    try{
+      const r = await API.addRequest(reqData);
+      DB.addRequest(reqData);
+      if(r && r.ok) onlineCount++; else offlineCount++;
+    }catch(e){
+      DB.addRequest(reqData);
+      offlineCount++;
+    }
   }
+  document.getElementById('applyMemo').value='';
+  multiDates = [];
+  dateTypes = {};
+  renderCal();
+  renderMultiDateChips();
+  updateRemainPreview();
+  showToast(offlineCount>0
+    ? `${dates.length}日分の申請を送信しました（一部オフライン保存：${offlineCount}件）`
+    : `${dates.length}日分の申請を送信しました！園長の承認をお待ちください`);
+  showPage('history',document.querySelectorAll('.ni')[2]);
+  btn.textContent = '申請する'; btn.disabled = false;
 }
 </script>
 </body>
