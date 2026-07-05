@@ -253,9 +253,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
       <div class="cat-tab" id="catTabHour" onclick="setCat('時間単位',this)">⏰ 時間単位</div>
     </div>
     <div class="form-section">
-      <div class="form-row">
+      <div class="form-row" id="multiDayToggleRow">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="multiDayToggle" onchange="toggleMultiDay()" style="width:16px;height:16px">
+          <span style="font-size:13px;color:#555">複数日をまとめて申請する（連続した期間）</span>
+        </label>
+      </div>
+      <div class="form-row" id="singleDateRow">
         <div class="f-label">取得希望日</div>
         <input type="date" class="f-input" id="applyDate">
+      </div>
+      <div class="form-row" id="rangeDateRow" style="display:none">
+        <div class="f-label">期間（開始日 〜 終了日）</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="date" class="f-input" id="applyDateStart" oninput="updateRemainPreview()" style="flex:1">
+          <span style="color:#aaa">〜</span>
+          <input type="date" class="f-input" id="applyDateEnd" oninput="updateRemainPreview()" style="flex:1">
+        </div>
+        <div style="font-size:12px;color:#999;margin-top:6px" id="multiDayPreview">開始日・終了日を選択してください</div>
       </div>
       <div class="form-row" id="typeRow">
         <div class="f-label">種別</div>
@@ -736,14 +751,48 @@ function setCat(cat,el){
   applyCategory=cat;
   document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('typeRow').style.display = cat==='時間単位'?'none':'';
-  document.getElementById('hourRow').style.display = cat==='時間単位'?'':'none';
+  const isHour = cat==='時間単位';
+  document.getElementById('multiDayToggleRow').style.display = isHour ? 'none' : '';
+  if(isHour && multiDayMode){
+    document.getElementById('multiDayToggle').checked = false;
+    toggleMultiDay();
+  }
+  document.getElementById('typeRow').style.display = (isHour || multiDayMode) ? 'none' : '';
+  document.getElementById('hourRow').style.display = isHour ? '' : 'none';
   document.getElementById('applyNote').textContent = cat==='夏期'
     ? '※ 夏季休暇は有給休暇とは別枠です（就業規則第24条）'
     : cat==='時間単位'
     ? '※ 時間単位有給は最大5時間まで取得できます'
     : '※ 取得希望日の1週間前までに申請してください（第29条）';
   updateRemainPreview();
+}
+
+let multiDayMode = false;
+function toggleMultiDay(){
+  multiDayMode = document.getElementById('multiDayToggle').checked;
+  document.getElementById('singleDateRow').style.display = multiDayMode ? 'none' : '';
+  document.getElementById('rangeDateRow').style.display = multiDayMode ? '' : 'none';
+  document.getElementById('typeRow').style.display = (multiDayMode || applyCategory==='時間単位') ? 'none' : '';
+  document.getElementById('applyNote').textContent = multiDayMode
+    ? '※ 期間内の平日（土日を除く）がそれぞれ1件の申請として登録されます'
+    : (applyCategory==='夏期'
+      ? '※ 夏季休暇は有給休暇とは別枠です（就業規則第24条）'
+      : '※ 取得希望日の1週間前までに申請してください（第29条）');
+  updateRemainPreview();
+}
+
+function getWeekdaysInRange(startStr, endStr){
+  const start = new Date(startStr+'T00:00:00');
+  const end = new Date(endStr+'T00:00:00');
+  const days = [];
+  if(isNaN(start)||isNaN(end)||start>end) return days;
+  const cur = new Date(start);
+  while(cur<=end){
+    const dow = cur.getDay();
+    if(dow!==0 && dow!==6) days.push(cur.toISOString().slice(0,10));
+    cur.setDate(cur.getDate()+1);
+  }
+  return days;
 }
 
 function selType(el,val){
@@ -760,6 +809,25 @@ function updateRemainPreview(){
   if(!me) return;
   const s = getLatestMe(); if(!s) return;
   const el = document.getElementById('remainPreview');
+  if(multiDayMode){
+    const startV=document.getElementById('applyDateStart').value;
+    const endV=document.getElementById('applyDateEnd').value;
+    const dates = (startV&&endV) ? getWeekdaysInRange(startV,endV) : [];
+    const cnt = dates.length;
+    const preview = document.getElementById('multiDayPreview');
+    if(!startV || !endV) preview.textContent = '開始日・終了日を選択してください';
+    else if(cnt===0) preview.textContent = '期間内に平日がありません（土日のみ選択されています）';
+    else preview.textContent = `対象：${cnt}日間（土日を除く） ${dates[0].slice(5).replace('-','/')}〜${dates[cnt-1].slice(5).replace('-','/')}`;
+
+    if(applyCategory==='夏期'){
+      const r=DB.getSummerRemain(s);
+      el.textContent = cnt>0 ? `現在 ${r}日 → 申請後 ${Math.max(0,r-cnt)}日（夏季休暇・${cnt}日分）` : '';
+    } else {
+      const r=DB.getRemain(s);
+      el.textContent = cnt>0 ? `現在 ${r}日 → 申請後 ${Math.max(0,r-cnt)}日（${cnt}日分）` : '';
+    }
+    return;
+  }
   if(applyCategory==='夏期'){
     const r=DB.getSummerRemain(s);
     el.textContent=`現在 ${r}日 → 申請後 ${Math.max(0,r-1)}日（夏季休暇）`;
@@ -781,10 +849,50 @@ function showToast(msg){
 
 async function submitApply(){
   if(!me) return;
-  const date=document.getElementById('applyDate').value;
   const memo=document.getElementById('applyMemo').value;
-  if(!date){ showToast('取得希望日を選択してください'); return; }
   const s=getLatestMe(); if(!s) return;
+  const btn = document.getElementById('subBtn');
+
+  if(multiDayMode){
+    const startV=document.getElementById('applyDateStart').value;
+    const endV=document.getElementById('applyDateEnd').value;
+    if(!startV || !endV){ showToast('開始日と終了日を選択してください'); return; }
+    const dates = getWeekdaysInRange(startV, endV);
+    if(!dates.length){ showToast('期間内に平日がありません'); return; }
+
+    const cat = applyCategory==='夏期' ? '夏期' : '有給';
+    const remainNow = cat==='夏期' ? DB.getSummerRemain(s) : DB.getRemain(s);
+    if(remainNow < dates.length){ showToast(`残日数が不足しています（必要：${dates.length}日）`); return; }
+
+    btn.disabled = true;
+    let onlineCount = 0, offlineCount = 0;
+    for(let i=0;i<dates.length;i++){
+      btn.textContent = `送信中... (${i+1}/${dates.length})`;
+      const reqData = cat==='夏期'
+        ? {staffId:me.id,name:s.name,date:dates[i],type:'全日（夏季）',days:1,memo,category:'夏期'}
+        : {staffId:me.id,name:s.name,date:dates[i],type:'全日',days:1,memo,category:'有給'};
+      try{
+        const r = await API.addRequest(reqData);
+        DB.addRequest(reqData);
+        if(r && r.ok) onlineCount++; else offlineCount++;
+      }catch(e){
+        DB.addRequest(reqData);
+        offlineCount++;
+      }
+    }
+    document.getElementById('applyMemo').value='';
+    document.getElementById('multiDayToggle').checked=false;
+    toggleMultiDay();
+    showToast(offlineCount>0
+      ? `${dates.length}日分の申請を送信しました（一部オフライン保存：${offlineCount}件）`
+      : `${dates.length}日分の申請を送信しました！園長の承認をお待ちください`);
+    showPage('history',document.querySelectorAll('.ni')[2]);
+    btn.textContent = '申請する'; btn.disabled = false;
+    return;
+  }
+
+  const date=document.getElementById('applyDate').value;
+  if(!date){ showToast('取得希望日を選択してください'); return; }
 
   let reqData;
   if(applyCategory==='夏期'){
@@ -800,7 +908,6 @@ async function submitApply(){
     reqData={staffId:me.id,name:s.name,date,type:applyType,days,memo,category:'有給'};
   }
 
-  const btn = document.getElementById('subBtn');
   btn.textContent = '送信中...'; btn.disabled = true;
   try {
     const r = await API.addRequest(reqData);
