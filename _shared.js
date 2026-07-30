@@ -1,5 +1,77 @@
 // ★ アプリ名: UQチェック（変更する場合は各HTMLの<title>とhd-titleを修正）
-// 共有データストア (localStorage)
+// ============================================================
+// GAS（Google Apps Script）バックエンド接続
+// ============================================================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyLt4nDzttOHvJlPtgOuQix3Gcq30S5x2KNvdD6ujCcw8Q92l4QhNWqpqgPGu-0DFVi1A/exec';
+
+const API = {
+  jsonp(params) {
+    return new Promise((resolve, reject) => {
+      const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*100000);
+      const script = document.createElement('script');
+      const query = new URLSearchParams({...params, callback: cb}).toString();
+      script.src = GAS_URL + '?' + query;
+      script.onerror = () => { delete window[cb]; reject(new Error('JSONP error')); };
+      window[cb] = (data) => {
+        delete window[cb];
+        if (script.parentNode) document.head.removeChild(script);
+        resolve(data);
+      };
+      document.head.appendChild(script);
+      setTimeout(() => {
+        if (window[cb]) { delete window[cb]; reject(new Error('timeout')); }
+      }, 15000);
+    });
+  },
+  async getStaff(garden) {
+    try { const r = await this.jsonp({action:'getStaff', garden: garden||''}); return r.ok ? r.data : []; }
+    catch(e) { return []; }
+  },
+  async getRequests(staffId, garden) {
+    try { const r = await this.jsonp({action:'getRequests', staffId: staffId||'', garden: garden||''}); return r.ok ? r.data : []; }
+    catch(e) { return []; }
+  },
+  async getPending(garden) {
+    try { const r = await this.jsonp({action:'getPending', garden: garden||''}); return r.ok ? r.data : []; }
+    catch(e) { return []; }
+  },
+  async addRequest(data) {
+    try { return await this.jsonp({action:'addRequest', data: JSON.stringify(data)}); }
+    catch(e) { return {ok:false, error:e.message}; }
+  },
+  async approveRequest(reqId, approver, garden) {
+    try { return await this.jsonp({action:'approveRequest', reqId, approver, garden: garden||''}); }
+    catch(e) { return {ok:false, error:e.message}; }
+  },
+  async rejectRequest(reqId, approver, reason, garden) {
+    try { return await this.jsonp({action:'rejectRequest', reqId, approver, reason: reason||'', garden: garden||''}); }
+    catch(e) { return {ok:false, error:e.message}; }
+  },
+};
+
+// URLの ?garden=園名 パラメータを取得（園長画面など、園ごとにアクセスを絞りたい画面で使用）
+function getUrlGarden(){
+  return new URLSearchParams(location.search).get('garden');
+}
+
+// スプレッドシートから最新データを取得し、ローカルキャッシュ(localStorage)に反映する。
+// 通信に失敗した場合は false を返し、既存のローカルキャッシュ（オフライン用）をそのまま使う。
+let GAS_LAST_SYNC_OK = false;
+async function syncFromGAS(garden) {
+  try {
+    const [staff, reqs] = await Promise.all([API.getStaff(garden), API.getRequests(null, garden)]);
+    if (staff && staff.length) DB.saveStaff(staff);
+    if (reqs) DB.saveRequests(reqs);
+    GAS_LAST_SYNC_OK = true;
+    return true;
+  } catch(e) {
+    console.warn('GAS同期失敗、ローカルキャッシュを使用します:', e);
+    GAS_LAST_SYNC_OK = false;
+    return false;
+  }
+}
+
+// 共有データストア (localStorage) ※GAS接続前のフォールバック/デモ用データとしても機能
 const DB = {
   KEY_STAFF: 'ym_staff',
   KEY_REQUESTS: 'ym_requests',

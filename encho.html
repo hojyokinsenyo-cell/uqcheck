@@ -98,10 +98,18 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 </style>
 </head>
 <body>
+<div id="gardenErrorView" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;background:var(--bg,#f5f6fa);padding:24px">
+  <div style="max-width:360px;text-align:center;background:#fff;border-radius:12px;padding:32px 24px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
+    <div style="font-size:18px;font-weight:700;color:var(--t,#222);margin-bottom:12px">UQチェック｜園長承認</div>
+    <div style="font-size:14px;color:#c0392b;line-height:1.7">このURLからはアクセスできません。<br>園ごとに配布されている専用のリンクをご利用ください。</div>
+    <div style="margin-top:10px;font-size:12px;color:#999">リンクが分からない場合は、本部にご確認ください。</div>
+  </div>
+</div>
+<div id="appRoot" style="display:none">
 <div class="topbar">
   <div>
     <div class="topbar-title">UQチェック｜園長承認</div>
-    <div class="topbar-sub">柴学園 有給管理システム</div>
+    <div class="topbar-sub" id="hdSub">柴学園 有給管理システム</div>
   </div>
   <div class="topbar-right">
     <span class="badge-pending" id="topPending">承認待ち 0件</span>
@@ -161,6 +169,7 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
     </div>
   </div>
 </div>
+</div>
 
 <!-- 承認/却下モーダル -->
 <div class="modal-overlay" id="actionModal">
@@ -188,6 +197,30 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 DB.init();
 let currentReqId = null;
 let currentAction = null;
+let syncing = false;
+
+// URLの ?garden=園名 パラメータ（例: encho.html?garden=稲城園）
+const MY_GARDEN = getUrlGarden();
+
+async function initialLoad(){
+  if(!MY_GARDEN){
+    document.getElementById('gardenErrorView').style.display = 'flex';
+    document.getElementById('appRoot').style.display = 'none';
+    return;
+  }
+  document.getElementById('appRoot').style.display = '';
+  document.getElementById('hdSub').textContent = `柴学園 有給管理システム｜${MY_GARDEN}`;
+  renderPending(); // まずローカルキャッシュ/デモデータですぐに表示
+  const ok = await syncFromGAS(MY_GARDEN);
+  if(ok){ refreshAll(); }
+  else { showSyncError(); }
+}
+
+function showSyncError(){
+  const ab = document.getElementById('alertBar');
+  ab.classList.add('show');
+  document.getElementById('alertText').textContent = 'スプレッドシートと通信できませんでした。表示中のデータは最新でない可能性があります。';
+}
 
 function getApprover(){ return localStorage.getItem('ym_approver')||'園長'; }
 function saveApprover(){
@@ -292,27 +325,48 @@ function openAction(reqId, action){
   modal.classList.add('open');
 }
 
-function execAction(){
+async function execAction(){
   const approver=getApprover();
-  if(currentAction==='approve') DB.approveRequest(currentReqId, approver);
-  else {
-    const reason=document.getElementById('rejectReason')?.value||'';
-    DB.rejectRequest(currentReqId, approver, reason);
+  const reason = currentAction==='reject' ? (document.getElementById('rejectReason')?.value||'') : '';
+  document.querySelectorAll('#modalBtns button').forEach(b=>b.disabled=true);
+
+  let result;
+  try{
+    result = (currentAction==='approve')
+      ? await API.approveRequest(currentReqId, approver, MY_GARDEN)
+      : await API.rejectRequest(currentReqId, approver, reason, MY_GARDEN);
+  }catch(e){
+    result = {ok:false, error:e.message};
+  }
+
+  if(result && result.ok){
+    await syncFromGAS(MY_GARDEN);
+  } else {
+    // 通信エラー時はローカルにも反映（オフライン対応。次回同期で上書きされます）
+    if(currentAction==='approve') DB.approveRequest(currentReqId, approver);
+    else DB.rejectRequest(currentReqId, approver, reason);
+    alert('スプレッドシートへの反映に失敗しました。通信環境をご確認のうえ、もう一度お試しください。');
   }
   document.getElementById('actionModal').classList.remove('open');
-  renderPending();
+  refreshAll();
 }
 
-function refreshAll(){
+async function refreshAll(){
+  if(!MY_GARDEN) return;
+  await syncFromGAS(MY_GARDEN);
   renderPending();
   renderAll();
   renderStaff();
 }
 
-renderPending();
+initialLoad();
 
-// 自動更新（5秒ごと）
-setInterval(()=>{ renderPending(); }, 5000);
+// 自動更新（8秒ごとにスプレッドシートと同期）
+setInterval(async ()=>{
+  if(!MY_GARDEN) return;
+  const ok = await syncFromGAS(MY_GARDEN);
+  if(ok) renderPending();
+}, 8000);
 </script>
 </body>
 </html>
