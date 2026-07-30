@@ -176,12 +176,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 <!-- ログイン -->
 <div id="loginView">
   <div class="login-wrap">
-    <div class="login-card">
+    <div class="login-card" id="loginCard">
       <div class="login-logo">UQ checker</div>
       <div class="login-sub">柴学園 有給管理アプリ</div>
-      <div class="login-label">職員を選択してください</div>
+      <div class="login-label" id="gardenLabel" style="font-size:15px;font-weight:700;color:#4169e1;margin-top:4px"></div>
+      <div class="login-label" style="margin-top:14px">職員を選択してください</div>
       <select class="login-select" id="staffSelect"></select>
       <button class="login-btn" onclick="doLogin()">ログイン</button>
+    </div>
+    <div class="login-card" id="loginErrorCard" style="display:none">
+      <div class="login-logo">UQ checker</div>
+      <div style="margin-top:16px;font-size:14px;color:#c0392b;line-height:1.7">
+        このURLからはログインできません。<br>
+        園ごとに配布されている専用のリンク（またはQRコード）からアクセスしてください。
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:#999;line-height:1.6">
+        リンクが分からない場合は、園長にご確認ください。
+      </div>
     </div>
   </div>
 </div>
@@ -402,9 +413,9 @@ const API = {
       }, 15000);
     });
   },
-  async getStaff() {
+  async getStaff(garden) {
     try {
-      const r = await this.jsonp({action:'getStaff'});
+      const r = await this.jsonp({action:'getStaff', garden: garden||''});
       return r.ok ? r.data : [];
     } catch(e) { return []; }
   },
@@ -622,25 +633,43 @@ function calPick(dateStr){
 
 calInit();
 
+// URLの ?garden=園名 パラメータを取得（例: staff_standalone.html?garden=稲城園）
+const MY_GARDEN = new URLSearchParams(location.search).get('garden');
+
 // ローディング表示
 function showLoading(msg) {
   const sel = document.getElementById('staffSelect');
   sel.innerHTML = `<option>${msg || '読み込み中...'}</option>`;
 }
 
+function showLoginError(){
+  document.getElementById('loginCard').style.display = 'none';
+  document.getElementById('loginErrorCard').style.display = '';
+}
+
+function renderStaffOptions(staffList){
+  const list = [...staffList].sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  document.getElementById('staffSelect').innerHTML =
+    list.map(s=>`<option value="${s.id}">${s.name}（${s.type}）</option>`).join('');
+}
+
 async function buildLoginList(){
+  if (!MY_GARDEN) {
+    // 園名の指定がないURLでは、個人情報保護のためログインさせない
+    showLoginError();
+    return;
+  }
+  document.getElementById('gardenLabel').textContent = MY_GARDEN;
   showLoading('職員情報を読み込み中...');
   try {
-    const staff = await API.getStaff();
+    // サーバー側(GAS)で園名フィルタ済みのデータのみ取得。他園のデータはブラウザに一切届かない
+    const staff = await API.getStaff(MY_GARDEN);
     if (staff.length === 0) {
-      // GASが取得できない場合はlocalStorageのデモデータを使用
       buildLoginListFallback();
       return;
     }
-    // GASのデータをローカルDBに保存
     DB.saveStaff(staff);
-    const sel = document.getElementById('staffSelect');
-    sel.innerHTML = staff.map(s=>`<option value="${s.id}">${s.name}（${s.type}）</option>`).join('');
+    renderStaffOptions(staff);
   } catch(e) {
     console.warn('GAS接続失敗、ローカルデータを使用:', e);
     buildLoginListFallback();
@@ -649,8 +678,9 @@ async function buildLoginList(){
 
 function buildLoginListFallback(){
   DB.init();
-  const sel = document.getElementById('staffSelect');
-  sel.innerHTML = DB.getStaff().map(s=>`<option value="${s.id}">${s.name}（${s.type}）</option>`).join('');
+  // フォールバック時もローカルのデモデータのうち該当園のみ表示
+  const list = DB.getStaff().filter(s => !s.garden || s.garden === MY_GARDEN);
+  renderStaffOptions(list.length ? list : DB.getStaff());
 }
 buildLoginList();
 
@@ -685,7 +715,19 @@ function logout(){
 
 try{
   const saved = localStorage.getItem('ym_login');
-  if(saved){ me=DB.getStaffById(saved); if(me) showMain(); else localStorage.removeItem('ym_login'); }
+  if(saved && MY_GARDEN){
+    const cand = DB.getStaffById(saved);
+    if(cand && cand.garden === MY_GARDEN){
+      me = cand;
+      showMain();
+    } else {
+      // 保存されていたログインは別の園のものなので無効化
+      localStorage.removeItem('ym_login');
+    }
+  } else if(saved && !MY_GARDEN){
+    // 園名の指定がないURLでは自動ログインさせない
+    localStorage.removeItem('ym_login');
+  }
 }catch(e){}
 
 function getLatestMe(){ if(!me) return null; return DB.getStaffById(me.id)||null; }
