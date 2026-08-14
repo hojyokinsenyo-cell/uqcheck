@@ -988,13 +988,13 @@ async function submitApply(){
     btn.textContent = dates.length>1 ? `送信中... (${i+1}/${dates.length})` : '送信中...';
     let reqData;
     if(applyCategory==='夏期'){
-      reqData = {staffId:me.id,name:s.name,date:dates[i],type:'全日（夏季）',days:1,memo,category:'夏期'};
+      reqData = {staffId:me.id,name:s.name,date:dates[i],type:'全日（夏季）',days:1,memo,category:'夏期',garden:MY_GARDEN};
     } else if(applyCategory==='時間単位'){
-      reqData = {staffId:me.id,name:s.name,date:dates[i],type:applyHours+'時間',days:applyHours/8,memo,category:'時間単位'};
+      reqData = {staffId:me.id,name:s.name,date:dates[i],type:applyHours+'時間',days:applyHours/8,memo,category:'時間単位',garden:MY_GARDEN};
     } else {
       const t = dateTypes[dates[i]] || '全日';
       const days = t==='全日' ? 1 : 0.5;
-      reqData = {staffId:me.id,name:s.name,date:dates[i],type:t,days,memo,category:'有給'};
+      reqData = {staffId:me.id,name:s.name,date:dates[i],type:t,days,memo,category:'有給',garden:MY_GARDEN};
     }
     try{
       const r = await API.addRequest(reqData);
