@@ -5,6 +5,42 @@
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyLt4nDzttOHvJlPtgOuQix3Gcq30S5x2KNvdD6ujCcw8Q92l4QhNWqpqgPGu-0DFVi1A/exec';
 
 const API = {
+  // ------------------------------------------------------------
+  // 低レベル呼び出し（v3：拡張機能対策）
+  //  1) まず通常の fetch でデータを取得する。
+  //     → fetch は <script> タグを注入しないため、広告ブロック等の
+  //       拡張機能に止められにくい（今回の「承認待ちが空」問題の対策）。
+  //  2) 万一 fetch がブロック/失敗した場合の"保険"として、従来の JSONP を試す。
+  //  3) どちらも失敗したら例外を投げる（＝本当に通信できない）。
+  //     → 呼び出し側（syncFromGAS）が検知して、画面に通信エラーを表示できる。
+  // ------------------------------------------------------------
+  async request(params) {
+    try {
+      const text = await this._fetchText(params);
+      return this._parse(text);
+    } catch (fetchErr) {
+      // fetch がダメだったときだけ JSONP を試す（これも失敗すれば例外が伝播する）
+      return await this.jsonp(params);
+    }
+  },
+
+  // 通常の fetch で取得。callback付きで呼ぶ＝GASが必ずデータを返す既知の形。
+  // （中身は cb({...}) で包まれて返るので、_parse で取り出す）
+  async _fetchText(params) {
+    const query = new URLSearchParams({ ...params, callback: 'cb' }).toString();
+    const res = await fetch(GAS_URL + '?' + query, { method: 'GET', redirect: 'follow' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.text();
+  },
+
+  // GASの応答から中身を取り出す（純粋なJSONでも、cb({...})形式でも対応）
+  _parse(text) {
+    const t = (text || '').trim();
+    const m = t.match(/^[\w$]+\s*\(([\s\S]*)\)\s*;?$/); // cb({...}) を剥がす
+    return JSON.parse(m ? m[1] : t);
+  },
+
+  // 保険用の従来方式（<script>タグ注入。拡張機能に止められることがある）
   jsonp(params) {
     return new Promise((resolve, reject) => {
       const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*100000);
@@ -23,28 +59,29 @@ const API = {
       }, 15000);
     });
   },
+
   async getStaff(garden) {
-    try { const r = await this.jsonp({action:'getStaff', garden: garden||''}); return r.ok ? r.data : []; }
+    try { const r = await this.request({action:'getStaff', garden: garden||''}); return r.ok ? r.data : []; }
     catch(e) { return []; }
   },
   async getRequests(staffId, garden) {
-    try { const r = await this.jsonp({action:'getRequests', staffId: staffId||'', garden: garden||''}); return r.ok ? r.data : []; }
+    try { const r = await this.request({action:'getRequests', staffId: staffId||'', garden: garden||''}); return r.ok ? r.data : []; }
     catch(e) { return []; }
   },
   async getPending(garden) {
-    try { const r = await this.jsonp({action:'getPending', garden: garden||''}); return r.ok ? r.data : []; }
+    try { const r = await this.request({action:'getPending', garden: garden||''}); return r.ok ? r.data : []; }
     catch(e) { return []; }
   },
   async addRequest(data) {
-    try { return await this.jsonp({action:'addRequest', data: JSON.stringify(data)}); }
+    try { return await this.request({action:'addRequest', data: JSON.stringify(data)}); }
     catch(e) { return {ok:false, error:e.message}; }
   },
   async approveRequest(reqId, approver, garden) {
-    try { return await this.jsonp({action:'approveRequest', reqId, approver, garden: garden||''}); }
+    try { return await this.request({action:'approveRequest', reqId, approver, garden: garden||''}); }
     catch(e) { return {ok:false, error:e.message}; }
   },
   async rejectRequest(reqId, approver, reason, garden) {
-    try { return await this.jsonp({action:'rejectRequest', reqId, approver, reason: reason||'', garden: garden||''}); }
+    try { return await this.request({action:'rejectRequest', reqId, approver, reason: reason||'', garden: garden||''}); }
     catch(e) { return {ok:false, error:e.message}; }
   },
 };
@@ -59,7 +96,14 @@ function getUrlGarden(){
 let GAS_LAST_SYNC_OK = false;
 async function syncFromGAS(garden) {
   try {
-    const [staff, reqs] = await Promise.all([API.getStaff(garden), API.getRequests(null, garden)]);
+    // API.request は通信に失敗すると例外を投げるので、
+    // 「本当に繋がらなかった（＝空ではなく通信エラー）」をここで正しく検知できる。
+    const [staffRes, reqRes] = await Promise.all([
+      API.request({action:'getStaff', garden: garden||''}),
+      API.request({action:'getRequests', staffId:'', garden: garden||''}),
+    ]);
+    const staff = staffRes && staffRes.ok ? staffRes.data : [];
+    const reqs  = reqRes  && reqRes.ok  ? reqRes.data  : [];
     if (staff && staff.length) DB.saveStaff(staff);
     if (reqs) DB.saveRequests(reqs);
     GAS_LAST_SYNC_OK = true;
