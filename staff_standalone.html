@@ -208,6 +208,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
         <div class="profile-name" id="uname"></div>
         <div class="profile-sub" id="utype"></div>
       </div>
+      <div id="expireBadge" style="margin-left:auto;text-align:right"></div>
     </div>
 
     <!-- 年次有給カード -->
@@ -540,6 +541,18 @@ const DB = {
     this.init();
   },
 
+  // ★デモ固定用：ブラウザに残る「本番同期時の実データ」を初回だけ一掃し、以降は
+  //   園長用(encho.html)・職員用(staff_standalone.html)で入力したデモの申請を共有し続ける
+  DEMO_VERSION: 'demo-v1',
+  ensureDemoData(){
+    if(localStorage.getItem('ym_demo_version') !== this.DEMO_VERSION){
+      this.reset();
+      localStorage.setItem('ym_demo_version', this.DEMO_VERSION);
+    } else {
+      this.init();
+    }
+  },
+
   getRemain(s){ return parseFloat((s.grant + s.carry - s.used).toFixed(1)); },
   getSummerRemain(s){ return Math.max(0, (s.summerTotal||0) - (s.summerUsed||0)); },
   getObligDone(s){ return s.used >= 5; },
@@ -658,8 +671,9 @@ calInit();
 // ★デモ固定：このページは常にデモ園・ダミー職員のみを表示し、実データ（GAS本番スプレッドシート）は一切取得しない
 const MY_GARDEN = 'しおどめ保育園○○';
 
-// ページを開くたびに、過去の本番同期などで残っているローカルデータを消し、必ずデモ用の13名に戻す
-DB.reset();
+// ページを開くたびに、過去の本番同期などで残っているローカルデータを初回だけ一掃し、
+// 以降は園長用・職員用で共有するデモデータとして扱う（=自分が出した申請が園長画面にも反映される）
+DB.ensureDemoData();
 
 // ローディング表示
 function showLoading(msg) {
@@ -744,6 +758,12 @@ function renderHome(){
   document.getElementById('avatar').textContent = s.name[0];
   document.getElementById('uname').textContent = s.name;
   document.getElementById('utype').textContent = s.type+'／採用 '+s.hire.replace(/-/g,'/');
+  const expDays = DB.getExpireDays(s);
+  const expColor = expDays===null ? '#aaa' : expDays<=30 ? '#e94b4b' : expDays<=90 ? '#e8a23d' : '#4169e1';
+  const expText = expDays===null ? '基準日未設定' : (expDays>=0 ? `失効まで${expDays}日` : '失効済');
+  document.getElementById('expireBadge').innerHTML =
+    `<div style="font-size:10px;color:#aaa">基準日 ${s.grantDate?s.grantDate.replace(/-/g,'/'):'—'}</div>` +
+    `<div style="font-size:13px;font-weight:700;color:${expColor}">${expText}</div>`;
   document.getElementById('remainNum').textContent = remain;
   document.getElementById('mGrant').textContent = s.grant;
   document.getElementById('mCarry').textContent = s.carry;

@@ -213,6 +213,18 @@ const DB = {
     this.init();
   },
 
+  // ★デモ固定用：ブラウザに残る「本番同期時の実データ」を初回だけ一掃し、以降は
+  //   園長用(encho.html)・職員用(staff_standalone.html)で入力したデモの申請を共有し続ける
+  DEMO_VERSION: 'demo-v1',
+  ensureDemoData(){
+    if(localStorage.getItem('ym_demo_version') !== this.DEMO_VERSION){
+      this.reset();
+      localStorage.setItem('ym_demo_version', this.DEMO_VERSION);
+    } else {
+      this.init();
+    }
+  },
+
   getRemain(s){ return parseFloat((s.grant + s.carry - s.used).toFixed(1)); },
   getSummerRemain(s){ return Math.max(0, (s.summerTotal||0) - (s.summerUsed||0)); },
   getObligDone(s){ return s.used >= 5; },

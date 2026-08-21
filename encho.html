@@ -133,7 +133,7 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
       <div class="alert-bar" id="alertBar">⚠️ <span id="alertText"></span></div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>氏名</th><th>取得希望日</th><th>種別</th><th>申請日時</th><th>メモ</th><th>操作</th></tr></thead>
+          <thead><tr><th>氏名</th><th>取得希望日</th><th>種別</th><th>基準日</th><th>失効まで</th><th>申請日時</th><th>メモ</th><th>操作</th></tr></thead>
           <tbody id="pendingBody"></tbody>
         </table>
       </div>
@@ -194,8 +194,9 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 
 <script src="_shared.js?v=3"></script>
 <script>
-// ページを開くたびに、過去の本番同期などで残っているローカルデータを消し、必ずデモ用の13名に戻す
-DB.reset();
+// ページを開くたびに、過去の本番同期などで残っているローカルデータを初回だけ一掃し、
+// 以降は園長用・職員用で共有するデモデータとして扱う（=職員の申請が園長画面にも反映される）
+DB.ensureDemoData();
 let currentReqId = null;
 let currentAction = null;
 
@@ -240,19 +241,27 @@ function renderPending(){
   if(cnt>0){ ab.classList.add('show'); document.getElementById('alertText').textContent=`${cnt}件の申請が承認を待っています`; }
   else ab.classList.remove('show');
   const tbody = document.getElementById('pendingBody');
-  if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="6" class="empty">承認待ちの申請はありません</td></tr>`; return; }
-  tbody.innerHTML = reqs.map(r=>`
+  if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="8" class="empty">承認待ちの申請はありません</td></tr>`; return; }
+  tbody.innerHTML = reqs.map(r=>{
+    const s = DB.getStaffById(r.staffId);
+    const expDays = s ? DB.getExpireDays(s) : null;
+    const expCell = expDays===null ? '<span style="font-size:11px;color:var(--tm)">—</span>'
+      : `<span style="${expDays<=30?'color:var(--red);font-weight:600':expDays<=90?'color:var(--warn);font-weight:600':''}">${expDays>=0?expDays+'日':'失効済'}</span>`;
+    return `
     <tr>
       <td style="font-weight:500">${r.name}</td>
       <td>${r.date}</td>
       <td>${r.type}（${r.days}日）</td>
+      <td style="font-size:12px">${s&&s.grantDate?s.grantDate:'—'}</td>
+      <td>${expCell}</td>
       <td style="font-size:12px;color:var(--tm)">${r.createdAt}</td>
       <td style="font-size:12px;color:var(--ts)">${r.memo||'—'}</td>
       <td><div class="action-row">
         <button class="abtn abtn-ok" onclick="directApprove('${r.id}', this)">✓ 承認</button>
         <button class="abtn abtn-ng" onclick="openAction('${r.id}','reject')">✗ 却下</button>
       </div></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 function renderAll(){
