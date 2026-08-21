@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <!-- ★ アプリ名を変更する場合はこの<title>と、直下のhd-titleを変更してください -->
-<title>UQチェック - 園長承認画面</title>
+<title>UQチェッカー - 園長承認画面</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -100,7 +100,7 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 <body>
 <div id="gardenErrorView" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;background:var(--bg,#f5f6fa);padding:24px">
   <div style="max-width:360px;text-align:center;background:#fff;border-radius:12px;padding:32px 24px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
-    <div style="font-size:18px;font-weight:700;color:var(--t,#222);margin-bottom:12px">UQチェック｜園長承認</div>
+    <div style="font-size:18px;font-weight:700;color:var(--t,#222);margin-bottom:12px">UQチェッカー｜園長承認</div>
     <div style="font-size:14px;color:#c0392b;line-height:1.7">このURLからはアクセスできません。<br>園ごとに配布されている専用のリンクをご利用ください。</div>
     <div style="margin-top:10px;font-size:12px;color:#999">リンクが分からない場合は、本部にご確認ください。</div>
   </div>
@@ -108,7 +108,7 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 <div id="appRoot" style="display:none">
 <div class="topbar">
   <div>
-    <div class="topbar-title">UQチェック｜園長承認</div>
+    <div class="topbar-title">UQチェッカー｜園長承認</div>
     <div class="topbar-sub" id="hdSub">柴学園 有給管理システム</div>
   </div>
   <div class="topbar-right">
@@ -162,7 +162,7 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
       <div class="page-title">職員の残日数一覧</div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>氏名</th><th>雇用形態</th><th>有給付与</th><th>繰越</th><th>取得済</th><th>有給残</th><th>夏期休暇</th><th>5日義務</th></tr></thead>
+          <thead><tr><th>氏名</th><th>雇用形態</th><th>有給付与</th><th>繰越</th><th>取得済</th><th>有給残</th><th>基準日</th><th>失効まで</th><th>夏期休暇</th><th>5日義務</th></tr></thead>
           <tbody id="staffBody"></tbody>
         </table>
       </div>
@@ -197,29 +197,16 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 DB.init();
 let currentReqId = null;
 let currentAction = null;
-let syncing = false;
 
-// URLの ?garden=園名 パラメータ（例: encho.html?garden=稲城園）
-const MY_GARDEN = getUrlGarden();
+// ★デモ固定：このページは常にデモ園・ダミー職員のみを表示し、実データ（GAS本番スプレッドシート）は一切取得しない
+const MY_GARDEN = 'しおどめ保育園○○';
 
-async function initialLoad(){
-  if(!MY_GARDEN){
-    document.getElementById('gardenErrorView').style.display = 'flex';
-    document.getElementById('appRoot').style.display = 'none';
-    return;
-  }
+function initialLoad(){
   document.getElementById('appRoot').style.display = '';
-  document.getElementById('hdSub').textContent = `柴学園 有給管理システム｜${MY_GARDEN}`;
-  renderPending(); // まずローカルキャッシュ/デモデータですぐに表示
-  const ok = await syncFromGAS(MY_GARDEN);
-  if(ok){ refreshAll(); }
-  else { showSyncError(); }
-}
-
-function showSyncError(){
-  const ab = document.getElementById('alertBar');
-  ab.classList.add('show');
-  document.getElementById('alertText').textContent = 'スプレッドシートと通信できませんでした。表示中のデータは最新でない可能性があります。';
+  document.getElementById('hdSub').textContent = `柴学園 有給管理システム｜${MY_GARDEN}｜デモ`;
+  renderPending();
+  renderAll();
+  renderStaff();
 }
 
 function getApprover(){ return localStorage.getItem('ym_approver')||'園長'; }
@@ -261,7 +248,7 @@ function renderPending(){
       <td style="font-size:12px;color:var(--tm)">${r.createdAt}</td>
       <td style="font-size:12px;color:var(--ts)">${r.memo||'—'}</td>
       <td><div class="action-row">
-        <button class="abtn abtn-ok" onclick="openAction('${r.id}','approve')">✓ 承認</button>
+        <button class="abtn abtn-ok" onclick="directApprove('${r.id}', this)">✓ 承認</button>
         <button class="abtn abtn-ng" onclick="openAction('${r.id}','reject')">✗ 却下</button>
       </div></td>
     </tr>`).join('');
@@ -292,6 +279,9 @@ function renderStaff(){
     const rc=remain<=3?'color:var(--red)':remain<=7?'color:var(--warn)':'';
     const sr=DB.getSummerRemain(s);
     const summerBadge=s.summerTotal>0?(sr===0?'<span class="sbadge s-ok">✓ 取得完了</span>':`<span class="sbadge" style="background:#fff0f7;color:#ff69b4">${sr}日残</span>`):'<span style="font-size:11px;color:var(--tm)">対象外</span>';
+    const expDays=DB.getExpireDays(s);
+    const expCell = expDays===null ? '<span style="font-size:11px;color:var(--tm)">未設定</span>'
+      : `<span style="${expDays<=30?'color:var(--red);font-weight:600':expDays<=90?'color:var(--warn);font-weight:600':''}">${expDays>=0?expDays+'日':'失効済'}</span>`;
     return `<tr>
       <td style="font-weight:500">${s.name}</td>
       <td><span class="sbadge s-gray">${s.type}</span></td>
@@ -299,10 +289,21 @@ function renderStaff(){
       <td>${s.carry}日</td>
       <td>${s.used}日</td>
       <td style="font-weight:600;${rc}">${remain}日</td>
+      <td style="font-size:12px">${s.grantDate||'—'}</td>
+      <td>${expCell}</td>
       <td>${summerBadge}</td>
       <td><span class="sbadge ${done?'s-ok':'s-pend'}">${done?'✓ 達成':'未達成'}</span></td>
     </tr>`;
   }).join('');
+}
+
+// 承認ボタンは確認画面を挟まず即実行する（却下は openAction のモーダルを使用）
+// ★デモ固定：ローカルのダミーデータのみを更新し、GASへは送信しない
+function directApprove(reqId, btn){
+  if(btn) btn.disabled = true;
+  const approver = getApprover();
+  DB.approveRequest(reqId, approver);
+  refreshAll();
 }
 
 function openAction(reqId, action){
@@ -325,48 +326,26 @@ function openAction(reqId, action){
   modal.classList.add('open');
 }
 
-async function execAction(){
+// ★デモ固定：ローカルのダミーデータのみを更新し、GASへは送信しない
+function execAction(){
   const approver=getApprover();
   const reason = currentAction==='reject' ? (document.getElementById('rejectReason')?.value||'') : '';
   document.querySelectorAll('#modalBtns button').forEach(b=>b.disabled=true);
 
-  let result;
-  try{
-    result = (currentAction==='approve')
-      ? await API.approveRequest(currentReqId, approver, MY_GARDEN)
-      : await API.rejectRequest(currentReqId, approver, reason, MY_GARDEN);
-  }catch(e){
-    result = {ok:false, error:e.message};
-  }
+  if(currentAction==='approve') DB.approveRequest(currentReqId, approver);
+  else DB.rejectRequest(currentReqId, approver, reason);
 
-  if(result && result.ok){
-    await syncFromGAS(MY_GARDEN);
-  } else {
-    // 通信エラー時はローカルにも反映（オフライン対応。次回同期で上書きされます）
-    if(currentAction==='approve') DB.approveRequest(currentReqId, approver);
-    else DB.rejectRequest(currentReqId, approver, reason);
-    alert('スプレッドシートへの反映に失敗しました。通信環境をご確認のうえ、もう一度お試しください。');
-  }
   document.getElementById('actionModal').classList.remove('open');
   refreshAll();
 }
 
-async function refreshAll(){
-  if(!MY_GARDEN) return;
-  await syncFromGAS(MY_GARDEN);
+function refreshAll(){
   renderPending();
   renderAll();
   renderStaff();
 }
 
 initialLoad();
-
-// 自動更新（8秒ごとにスプレッドシートと同期）
-setInterval(async ()=>{
-  if(!MY_GARDEN) return;
-  const ok = await syncFromGAS(MY_GARDEN);
-  if(ok) renderPending();
-}, 8000);
 </script>
 </body>
 </html>

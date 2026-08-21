@@ -448,17 +448,24 @@ const DB = {
   KEY_REQUESTS: 'ym_requests',
 
   defaultStaff: [
-    {id:'EMP001',name:'山田 花子',type:'正規',hire:'2021-04-01',grant:14,carry:2,used:4,summerUsed:2,summerTotal:5,basicPay:220000,allowance:15000,avgMonthlyHours:160,email:'hanako@shiba.ed.jp'},
-    {id:'EMP002',name:'田中 一郎',type:'正規',hire:'2018-04-01',grant:20,carry:0,used:5,summerUsed:5,summerTotal:5,basicPay:260000,allowance:20000,avgMonthlyHours:160,email:'ichiro@shiba.ed.jp'},
-    {id:'EMP003',name:'佐藤 美咲',type:'パート',hire:'2024-04-01',grant:10,carry:3,used:1,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1100,email:'misaki@shiba.ed.jp'},
-    {id:'EMP004',name:'鈴木 健太',type:'正規',hire:'2020-04-01',grant:16,carry:2,used:6,summerUsed:3,summerTotal:5,basicPay:240000,allowance:18000,avgMonthlyHours:160,email:'kenta@shiba.ed.jp'},
-    {id:'EMP005',name:'伊藤 明',type:'嘱託',hire:'2023-10-01',grant:11,carry:0,used:3,summerUsed:0,summerTotal:5,basicPay:200000,allowance:10000,avgMonthlyHours:160,email:'akira@shiba.ed.jp'},
-    {id:'EMP006',name:'渡辺 さくら',type:'パート',hire:'2024-01-01',grant:10,carry:1,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1050,email:'sakura@shiba.ed.jp'},
+    {id:'EMP001',name:'佐藤 花子',type:'正規',hire:'2019-04-01',grantDate:'2026-04-01',grant:18,carry:3,used:6,summerUsed:3,summerTotal:5,basicPay:250000,allowance:18000,avgMonthlyHours:160,email:'sato.hanako@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP002',name:'鈴木 美咲',type:'正規',hire:'2021-04-01',grantDate:'2026-04-01',grant:14,carry:2,used:4,summerUsed:2,summerTotal:5,basicPay:230000,allowance:15000,avgMonthlyHours:160,email:'suzuki.misaki@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP003',name:'高橋 由紀',type:'嘱託',hire:'2022-10-01',grantDate:'2026-04-01',grant:11,carry:1,used:3,summerUsed:0,summerTotal:5,basicPay:200000,allowance:10000,avgMonthlyHours:160,email:'takahashi.yuki@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP004',name:'田中 彩香',type:'パート',hire:'2023-04-01',grantDate:'2026-04-01',grant:10,carry:2,used:1,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1100,email:'tanaka.ayaka@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP005',name:'渡辺 麻衣',type:'パート',hire:'2024-01-01',grantDate:'2026-04-01',grant:10,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1050,email:'watanabe.mai@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP006',name:'伊藤 奈々',type:'正規',hire:'2017-04-01',grantDate:'2026-04-01',grant:20,carry:5,used:8,summerUsed:5,summerTotal:5,basicPay:270000,allowance:20000,avgMonthlyHours:160,email:'ito.nana@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP007',name:'山本 千夏',type:'正規',hire:'2020-04-01',grantDate:'2026-04-01',grant:16,carry:2,used:5,summerUsed:3,summerTotal:5,basicPay:240000,allowance:16000,avgMonthlyHours:160,email:'yamamoto.chinatsu@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP008',name:'中村 恵',type:'パート',hire:'2022-09-01',grantDate:'2026-04-01',grant:11,carry:1,used:2,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1120,email:'nakamura.megumi@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP009',name:'小林 遥',type:'正規',hire:'2023-04-01',grantDate:'2026-04-01',grant:10,carry:0,used:2,summerUsed:1,summerTotal:5,basicPay:210000,allowance:12000,avgMonthlyHours:160,email:'kobayashi.haruka@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP010',name:'加藤 里奈',type:'パート',hire:'2021-06-01',grantDate:'2026-04-01',grant:11,carry:2,used:3,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1080,email:'kato.rina@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP011',name:'吉田 沙織',type:'嘱託',hire:'2020-10-01',grantDate:'2026-04-01',grant:12,carry:1,used:4,summerUsed:0,summerTotal:5,basicPay:205000,allowance:11000,avgMonthlyHours:160,email:'yoshida.saori@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP012',name:'山田 真央',type:'パート',hire:'2024-04-01',grantDate:'2026-04-01',grant:10,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1050,email:'yamada.mao@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP013',name:'佐々木 桃子',type:'正規',hire:'2019-10-01',grantDate:'2026-04-01',grant:18,carry:3,used:7,summerUsed:4,summerTotal:5,basicPay:245000,allowance:17000,avgMonthlyHours:160,email:'sasaki.momoko@shiba.ed.jp',garden:'しおどめ保育園○○'},
   ],
 
   defaultRequests: [
-    {id:'REQ001',staffId:'EMP002',name:'田中 一郎',date:'2026-06-10',type:'全日',days:1,memo:'',status:'承認済',approver:'園長 鈴木',approvedAt:'2026-06-05 14:20',rejectedReason:'',createdAt:'2026-06-05 09:12',category:'有給'},
-    {id:'REQ002',staffId:'EMP004',name:'鈴木 健太',date:'2026-06-20',type:'午前半休',days:0.5,memo:'通院のため',status:'承認済',approver:'園長 鈴木',approvedAt:'2026-06-12 16:00',rejectedReason:'',createdAt:'2026-06-12 14:30',category:'有給'},
+    {id:'REQ001',staffId:'EMP002',name:'鈴木 美咲',date:'2026-06-10',type:'全日',days:1,memo:'',status:'承認済',approver:'園長',approvedAt:'2026-06-05 14:20',rejectedReason:'',createdAt:'2026-06-05 09:12',category:'有給'},
+    {id:'REQ002',staffId:'EMP007',name:'山本 千夏',date:'2026-06-20',type:'午前半休',days:0.5,memo:'通院のため',status:'承認済',approver:'園長',approvedAt:'2026-06-12 16:00',rejectedReason:'',createdAt:'2026-06-12 14:30',category:'有給'},
   ],
 
   init(){
@@ -474,6 +481,7 @@ const DB = {
       if(s.allowance === undefined){ s.allowance = 0; updated = true; }
       if(s.avgMonthlyHours === undefined){ s.avgMonthlyHours = 160; updated = true; }
       if(s.category === undefined){ s.category = '有給'; updated = true; }
+      if(s.grantDate === undefined){ s.grantDate = ''; updated = true; }
     });
     if(updated) this.saveStaff(staff);
   },
@@ -535,6 +543,20 @@ const DB = {
   getRemain(s){ return parseFloat((s.grant + s.carry - s.used).toFixed(1)); },
   getSummerRemain(s){ return Math.max(0, (s.summerTotal||0) - (s.summerUsed||0)); },
   getObligDone(s){ return s.used >= 5; },
+
+  // 基準日（直近の有給付与日）と、そこから法定2年で失効するまでの日数
+  getExpireDate(s){
+    if(!s.grantDate) return null;
+    const g = new Date(s.grantDate);
+    if(isNaN(g)) return null;
+    return new Date(g.getFullYear()+2, g.getMonth(), g.getDate());
+  },
+  getExpireDays(s){
+    const exp = this.getExpireDate(s);
+    if(!exp) return null;
+    const today = new Date(); today.setHours(0,0,0,0);
+    return Math.ceil((exp - today) / (24*3600*1000));
+  },
 
   // 時間給計算（給与規程第17・18条）
   calcHourlyWage(s){
@@ -633,8 +655,8 @@ function calPick(dateStr){
 
 calInit();
 
-// URLの ?garden=園名 パラメータを取得（例: staff_standalone.html?garden=稲城園）
-const MY_GARDEN = new URLSearchParams(location.search).get('garden');
+// ★デモ固定：このページは常にデモ園・ダミー職員のみを表示し、実データ（GAS本番スプレッドシート）は一切取得しない
+const MY_GARDEN = 'しおどめ保育園○○';
 
 // ローディング表示
 function showLoading(msg) {
@@ -653,32 +675,10 @@ function renderStaffOptions(staffList){
     list.map(s=>`<option value="${s.id}">${s.name}（${s.type}）</option>`).join('');
 }
 
-async function buildLoginList(){
-  if (!MY_GARDEN) {
-    // 園名の指定がないURLでは、個人情報保護のためログインさせない
-    showLoginError();
-    return;
-  }
-  document.getElementById('gardenLabel').textContent = MY_GARDEN;
-  showLoading('職員情報を読み込み中...');
-  try {
-    // サーバー側(GAS)で園名フィルタ済みのデータのみ取得。他園のデータはブラウザに一切届かない
-    const staff = await API.getStaff(MY_GARDEN);
-    if (staff.length === 0) {
-      buildLoginListFallback();
-      return;
-    }
-    DB.saveStaff(staff);
-    renderStaffOptions(staff);
-  } catch(e) {
-    console.warn('GAS接続失敗、ローカルデータを使用:', e);
-    buildLoginListFallback();
-  }
-}
-
-function buildLoginListFallback(){
+// ★デモ固定：ローカルのダミー職員のみを一覧表示し、GASへは接続しない
+function buildLoginList(){
+  document.getElementById('gardenLabel').textContent = MY_GARDEN + '（デモ）';
   DB.init();
-  // フォールバック時もローカルのデモデータのうち該当園のみ表示
   const list = DB.getStaff().filter(s => !s.garden || s.garden === MY_GARDEN);
   renderStaffOptions(list.length ? list : DB.getStaff());
 }
@@ -806,26 +806,14 @@ function doCalc(){
 async function renderHistory(){
   if(!me) return;
   const el = document.getElementById('histList');
-  el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0">読み込み中...</div>';
-  try {
-    const reqs = await API.getRequests(me.id);
-    if(!reqs.length){ el.innerHTML='<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0">申請履歴はありません</div>'; return; }
-    el.innerHTML = reqs.map(r=>{
-      const cls = r.status==='承認済'?(r.category==='夏期'?'s-summer':'s-ok'):r.status==='却下'?'s-ng':'s-pend';
-      const cat = r.category==='夏期'?'☀️ 夏季':r.category==='時間単位'?'⏰ 時間単位':'📋 有給';
-      return `<div class="hist-item"><div><div class="h-date">${r.date} ${r.type||''}</div><div class="h-sub">${cat} ／ ${r.createdAt}${r.rejectedReason?' ／ '+r.rejectedReason:''}</div></div><span class="sbadge ${cls}">${r.status}</span></div>`;
-    }).join('');
-  } catch(e) {
-    // フォールバック：ローカルデータ
-    const myId = me?me.id:'';
-    const reqs = DB.getRequests().filter(r=>r.staffId===myId);
-    if(!reqs.length){ el.innerHTML='<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0">申請履歴はありません</div>'; return; }
-    el.innerHTML = reqs.map(r=>{
-      const cls = r.status==='承認済'?(r.category==='夏期'?'s-summer':'s-ok'):r.status==='却下'?'s-ng':'s-pend';
-      const cat = r.category==='夏期'?'☀️ 夏季':r.category==='時間単位'?'⏰ 時間単位':'📋 有給';
-      return `<div class="hist-item"><div><div class="h-date">${r.date} ${r.type||''}</div><div class="h-sub">${cat} ／ ${r.createdAt}${r.rejectedReason?' ／ '+r.rejectedReason:''}</div></div><span class="sbadge ${cls}">${r.status}</span></div>`;
-    }).join('');
-  }
+  // ★デモ固定：ローカルのダミーデータから履歴を表示（GASへは接続しない）
+  const reqs = DB.getRequests().filter(r=>r.staffId===me.id);
+  if(!reqs.length){ el.innerHTML='<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0">申請履歴はありません</div>'; return; }
+  el.innerHTML = reqs.map(r=>{
+    const cls = r.status==='承認済'?(r.category==='夏期'?'s-summer':'s-ok'):r.status==='却下'?'s-ng':'s-pend';
+    const cat = r.category==='夏期'?'☀️ 夏季':r.category==='時間単位'?'⏰ 時間単位':'📋 有給';
+    return `<div class="hist-item"><div><div class="h-date">${r.date} ${r.type||''}</div><div class="h-sub">${cat} ／ ${r.createdAt}${r.rejectedReason?' ／ '+r.rejectedReason:''}</div></div><span class="sbadge ${cls}">${r.status}</span></div>`;
+  }).join('');
 }
 
 function renderMypage(){
@@ -836,6 +824,10 @@ function renderMypage(){
   const next = new Date(grant.getFullYear()+1,grant.getMonth(),grant.getDate());
   const diff = Math.floor((new Date()-hire)/(365.25*24*3600*1000));
   const nextDays=[10,11,12,14,16,18,20][Math.min(diff+1,6)];
+  const expDays = DB.getExpireDays(s);
+  const expireLabel = expDays===null ? '未設定' : (expDays>=0 ? expDays+'日' : '失効済');
+  const expireStyle = expDays!==null && expDays<=30 ? ' style="color:#e94b4b;font-weight:700"'
+    : expDays!==null && expDays<=90 ? ' style="color:#e8a23d;font-weight:700"' : '';
   document.getElementById('mypageContent').innerHTML=`
     <div class="my-row"><span class="my-key">氏名</span><span class="my-val">${s.name}</span></div>
     <div class="my-row"><span class="my-key">雇用形態</span><span class="my-val">${s.type}</span></div>
@@ -844,6 +836,8 @@ function renderMypage(){
     <div class="my-row"><span class="my-key">有給付与</span><span class="my-val">${s.grant}日</span></div>
     <div class="my-row"><span class="my-key">繰越</span><span class="my-val">${s.carry}日</span></div>
     <div class="my-row"><span class="my-key">有給残日数</span><span class="my-val" style="color:#4169e1;font-size:18px">${DB.getRemain(s)}日</span></div>
+    <div class="my-row"><span class="my-key">基準日（付与日）</span><span class="my-val">${s.grantDate||'未設定'}</span></div>
+    <div class="my-row"><span class="my-key">失効まで</span><span class="my-val"${expireStyle}>${expireLabel}</span></div>
     <div class="my-row"><span class="my-key">夏季休暇残</span><span class="my-val">${DB.getSummerRemain(s)}日</span></div>
     <div class="my-row"><span class="my-key">時間単位残</span><span class="my-val">${DB.getHourLeaveRemain?DB.getHourLeaveRemain(s):Math.max(0,(s.hourLeaveGrant||5)-(s.hourLeaveUsed||0))}時間</span></div>
     <div class="my-row"><span class="my-key">次回付与予定</span><span class="my-val">${next.toLocaleDateString('ja-JP')} ／ ${nextDays}日</span></div>
@@ -983,7 +977,6 @@ async function submitApply(){
   }
 
   btn.disabled = true;
-  let onlineCount = 0, offlineCount = 0;
   for(let i=0;i<dates.length;i++){
     btn.textContent = dates.length>1 ? `送信中... (${i+1}/${dates.length})` : '送信中...';
     let reqData;
@@ -996,14 +989,8 @@ async function submitApply(){
       const days = t==='全日' ? 1 : 0.5;
       reqData = {staffId:me.id,name:s.name,date:dates[i],type:t,days,memo,category:'有給',garden:MY_GARDEN};
     }
-    try{
-      const r = await API.addRequest(reqData);
-      DB.addRequest(reqData);
-      if(r && r.ok) onlineCount++; else offlineCount++;
-    }catch(e){
-      DB.addRequest(reqData);
-      offlineCount++;
-    }
+    // ★デモ固定：ローカルのダミーデータにのみ保存し、GASへは送信しない
+    DB.addRequest(reqData);
   }
   document.getElementById('applyMemo').value='';
   multiDates = [];
@@ -1011,9 +998,7 @@ async function submitApply(){
   renderCal();
   renderMultiDateChips();
   updateRemainPreview();
-  showToast(offlineCount>0
-    ? `${dates.length}日分の申請を送信しました（一部オフライン保存：${offlineCount}件）`
-    : `${dates.length}日分の申請を送信しました！園長の承認をお待ちください`);
+  showToast(`${dates.length}日分の申請を送信しました！園長の承認をお待ちください`);
   showPage('history',document.querySelectorAll('.ni')[2]);
   btn.textContent = '申請する'; btn.disabled = false;
 }

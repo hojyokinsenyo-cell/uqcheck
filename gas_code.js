@@ -112,14 +112,14 @@ function initSheets() {
       '夏季付与','夏季取得済',
       '時間単位付与','時間単位取得済',
       '基本給','手当','月平均所定時間','時給',
-      'メールアドレス','園名','園長メール'
+      'メールアドレス','園名','園長メール','基準日（直近付与日）'
     ]);
-    staffSheet.getRange(1,1,1,18).setFontWeight('bold').setBackground('#4169e1').setFontColor('#ffffff');
+    staffSheet.getRange(1,1,1,19).setFontWeight('bold').setBackground('#4169e1').setFontColor('#ffffff');
     staffSheet.appendRow([
       'EMP001','山田 花子','正規','2021-04-01',
       14,2,4,5,2,5,2,
       220000,15000,160,0,
-      'hanako@shiba.ed.jp','しおどめ保育園','encho@shiba.ed.jp'
+      'hanako@shiba.ed.jp','しおどめ保育園','encho@shiba.ed.jp','2026-04-01'
     ]);
   }
   let reqSheet = SS.getSheetByName(SHEET_REQUESTS);
@@ -159,6 +159,7 @@ function rowToStaff(row) {
     basicPay: Number(row[11])||0, allowance: Number(row[12])||0,
     avgMonthlyHours: Number(row[13])||160, hourlyWage: Number(row[14])||0,
     email: row[15]||'', garden: row[16]||'', enchoEmail: row[17]||'',
+    grantDate: formatDate(row[18]),
   };
 }
 

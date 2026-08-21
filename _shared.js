@@ -121,17 +121,24 @@ const DB = {
   KEY_REQUESTS: 'ym_requests',
 
   defaultStaff: [
-    {id:'EMP001',name:'山田 花子',type:'正規',hire:'2021-04-01',grant:14,carry:2,used:4,summerUsed:2,summerTotal:5,basicPay:220000,allowance:15000,avgMonthlyHours:160,email:'hanako@shiba.ed.jp'},
-    {id:'EMP002',name:'田中 一郎',type:'正規',hire:'2018-04-01',grant:20,carry:0,used:5,summerUsed:5,summerTotal:5,basicPay:260000,allowance:20000,avgMonthlyHours:160,email:'ichiro@shiba.ed.jp'},
-    {id:'EMP003',name:'佐藤 美咲',type:'パート',hire:'2024-04-01',grant:10,carry:3,used:1,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1100,email:'misaki@shiba.ed.jp'},
-    {id:'EMP004',name:'鈴木 健太',type:'正規',hire:'2020-04-01',grant:16,carry:2,used:6,summerUsed:3,summerTotal:5,basicPay:240000,allowance:18000,avgMonthlyHours:160,email:'kenta@shiba.ed.jp'},
-    {id:'EMP005',name:'伊藤 明',type:'嘱託',hire:'2023-10-01',grant:11,carry:0,used:3,summerUsed:0,summerTotal:5,basicPay:200000,allowance:10000,avgMonthlyHours:160,email:'akira@shiba.ed.jp'},
-    {id:'EMP006',name:'渡辺 さくら',type:'パート',hire:'2024-01-01',grant:10,carry:1,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1050,email:'sakura@shiba.ed.jp'},
+    {id:'EMP001',name:'佐藤 花子',type:'正規',hire:'2019-04-01',grantDate:'2026-04-01',grant:18,carry:3,used:6,summerUsed:3,summerTotal:5,basicPay:250000,allowance:18000,avgMonthlyHours:160,email:'sato.hanako@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP002',name:'鈴木 美咲',type:'正規',hire:'2021-04-01',grantDate:'2026-04-01',grant:14,carry:2,used:4,summerUsed:2,summerTotal:5,basicPay:230000,allowance:15000,avgMonthlyHours:160,email:'suzuki.misaki@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP003',name:'高橋 由紀',type:'嘱託',hire:'2022-10-01',grantDate:'2026-04-01',grant:11,carry:1,used:3,summerUsed:0,summerTotal:5,basicPay:200000,allowance:10000,avgMonthlyHours:160,email:'takahashi.yuki@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP004',name:'田中 彩香',type:'パート',hire:'2023-04-01',grantDate:'2026-04-01',grant:10,carry:2,used:1,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1100,email:'tanaka.ayaka@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP005',name:'渡辺 麻衣',type:'パート',hire:'2024-01-01',grantDate:'2026-04-01',grant:10,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1050,email:'watanabe.mai@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP006',name:'伊藤 奈々',type:'正規',hire:'2017-04-01',grantDate:'2026-04-01',grant:20,carry:5,used:8,summerUsed:5,summerTotal:5,basicPay:270000,allowance:20000,avgMonthlyHours:160,email:'ito.nana@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP007',name:'山本 千夏',type:'正規',hire:'2020-04-01',grantDate:'2026-04-01',grant:16,carry:2,used:5,summerUsed:3,summerTotal:5,basicPay:240000,allowance:16000,avgMonthlyHours:160,email:'yamamoto.chinatsu@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP008',name:'中村 恵',type:'パート',hire:'2022-09-01',grantDate:'2026-04-01',grant:11,carry:1,used:2,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1120,email:'nakamura.megumi@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP009',name:'小林 遥',type:'正規',hire:'2023-04-01',grantDate:'2026-04-01',grant:10,carry:0,used:2,summerUsed:1,summerTotal:5,basicPay:210000,allowance:12000,avgMonthlyHours:160,email:'kobayashi.haruka@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP010',name:'加藤 里奈',type:'パート',hire:'2021-06-01',grantDate:'2026-04-01',grant:11,carry:2,used:3,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1080,email:'kato.rina@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP011',name:'吉田 沙織',type:'嘱託',hire:'2020-10-01',grantDate:'2026-04-01',grant:12,carry:1,used:4,summerUsed:0,summerTotal:5,basicPay:205000,allowance:11000,avgMonthlyHours:160,email:'yoshida.saori@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP012',name:'山田 真央',type:'パート',hire:'2024-04-01',grantDate:'2026-04-01',grant:10,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1050,email:'yamada.mao@shiba.ed.jp',garden:'しおどめ保育園○○'},
+    {id:'EMP013',name:'佐々木 桃子',type:'正規',hire:'2019-10-01',grantDate:'2026-04-01',grant:18,carry:3,used:7,summerUsed:4,summerTotal:5,basicPay:245000,allowance:17000,avgMonthlyHours:160,email:'sasaki.momoko@shiba.ed.jp',garden:'しおどめ保育園○○'},
   ],
 
   defaultRequests: [
-    {id:'REQ001',staffId:'EMP002',name:'田中 一郎',date:'2026-06-10',type:'全日',days:1,memo:'',status:'承認済',approver:'園長 鈴木',approvedAt:'2026-06-05 14:20',rejectedReason:'',createdAt:'2026-06-05 09:12',category:'有給'},
-    {id:'REQ002',staffId:'EMP004',name:'鈴木 健太',date:'2026-06-20',type:'午前半休',days:0.5,memo:'通院のため',status:'承認済',approver:'園長 鈴木',approvedAt:'2026-06-12 16:00',rejectedReason:'',createdAt:'2026-06-12 14:30',category:'有給'},
+    {id:'REQ001',staffId:'EMP002',name:'鈴木 美咲',date:'2026-06-10',type:'全日',days:1,memo:'',status:'承認済',approver:'園長',approvedAt:'2026-06-05 14:20',rejectedReason:'',createdAt:'2026-06-05 09:12',category:'有給'},
+    {id:'REQ002',staffId:'EMP007',name:'山本 千夏',date:'2026-06-20',type:'午前半休',days:0.5,memo:'通院のため',status:'承認済',approver:'園長',approvedAt:'2026-06-12 16:00',rejectedReason:'',createdAt:'2026-06-12 14:30',category:'有給'},
   ],
 
   init(){
@@ -147,6 +154,7 @@ const DB = {
       if(s.allowance === undefined){ s.allowance = 0; updated = true; }
       if(s.avgMonthlyHours === undefined){ s.avgMonthlyHours = 160; updated = true; }
       if(s.category === undefined){ s.category = '有給'; updated = true; }
+      if(s.grantDate === undefined){ s.grantDate = ''; updated = true; }
     });
     if(updated) this.saveStaff(staff);
   },
@@ -208,6 +216,20 @@ const DB = {
   getRemain(s){ return parseFloat((s.grant + s.carry - s.used).toFixed(1)); },
   getSummerRemain(s){ return Math.max(0, (s.summerTotal||0) - (s.summerUsed||0)); },
   getObligDone(s){ return s.used >= 5; },
+
+  // 基準日（直近の有給付与日）と、そこから法定2年で失効するまでの日数
+  getExpireDate(s){
+    if(!s.grantDate) return null;
+    const g = new Date(s.grantDate);
+    if(isNaN(g)) return null;
+    return new Date(g.getFullYear()+2, g.getMonth(), g.getDate());
+  },
+  getExpireDays(s){
+    const exp = this.getExpireDate(s);
+    if(!exp) return null;
+    const today = new Date(); today.setHours(0,0,0,0);
+    return Math.ceil((exp - today) / (24*3600*1000));
+  },
 
   // 時間給計算（給与規程第17・18条）
   calcHourlyWage(s){
