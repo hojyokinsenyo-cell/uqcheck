@@ -658,6 +658,9 @@ calInit();
 // ★デモ固定：このページは常にデモ園・ダミー職員のみを表示し、実データ（GAS本番スプレッドシート）は一切取得しない
 const MY_GARDEN = 'しおどめ保育園○○';
 
+// ページを開くたびに、過去の本番同期などで残っているローカルデータを消し、必ずデモ用の13名に戻す
+DB.reset();
+
 // ローディング表示
 function showLoading(msg) {
   const sel = document.getElementById('staffSelect');
@@ -675,12 +678,11 @@ function renderStaffOptions(staffList){
     list.map(s=>`<option value="${s.id}">${s.name}（${s.type}）</option>`).join('');
 }
 
-// ★デモ固定：ローカルのダミー職員のみを一覧表示し、GASへは接続しない
+// ★デモ固定：ローカルのダミー職員（デモ園に属する13名）のみを一覧表示し、GASへは接続しない
 function buildLoginList(){
   document.getElementById('gardenLabel').textContent = MY_GARDEN + '（デモ）';
-  DB.init();
-  const list = DB.getStaff().filter(s => !s.garden || s.garden === MY_GARDEN);
-  renderStaffOptions(list.length ? list : DB.getStaff());
+  const list = DB.getStaff().filter(s => s.garden === MY_GARDEN);
+  renderStaffOptions(list.length ? list : DB.defaultStaff);
 }
 buildLoginList();
 

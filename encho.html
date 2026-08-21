@@ -194,7 +194,8 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 
 <script src="_shared.js?v=3"></script>
 <script>
-DB.init();
+// ページを開くたびに、過去の本番同期などで残っているローカルデータを消し、必ずデモ用の13名に戻す
+DB.reset();
 let currentReqId = null;
 let currentAction = null;
 
